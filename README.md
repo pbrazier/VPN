@@ -20,7 +20,7 @@ Cost-optimized, automated CloudFormation deployment for Tailscale exit nodes acr
    - Click "Generate auth key"
    - Configure the key:
      - ❌ **Reusable**: Leave unchecked for single-use keys
-     - ❌ **Ephemeral**: Leave unchecked
+     - ✅ **Ephemeral**: Nodes auto-cleanup when offline (recommended)
      - ✅ **Preauthorized**: Skip manual approval for new nodes
      - **Expiry**: Set to 1-7 days (sufficient for deployment)
      - **Tags**: Optional, use `tag:exitnode` for organization

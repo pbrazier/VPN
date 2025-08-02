@@ -13,20 +13,6 @@ Parameters:
     AllowedValues: ['t4g.nano', 't4g.micro', 't3.nano', 't3.micro']
     Description: 'EC2 instance type (t4g.nano recommended for cost)'
   
-
-
-Parameters:
-  TailscaleAuthKey:
-    Type: String
-    Description: 'Tailscale auth key for automatic registration'
-    NoEcho: true
-  
-  InstanceType:
-    Type: String
-    Default: 't4g.nano'
-    AllowedValues: ['t4g.nano', 't4g.micro', 't3.nano', 't3.micro']
-    Description: 'EC2 instance type (t4g.nano recommended for cost)'
-  
   AMIId:
     Type: AWS::EC2::Image::Id
     Description: 'ARM64 Amazon Linux 2023 AMI ID'
@@ -41,6 +27,8 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-vpc'
+        - Key: project
+          Value: tailscale
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -48,6 +36,8 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-igw'
+        - Key: project
+          Value: tailscale
 
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -65,6 +55,8 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-public-subnet'
+        - Key: project
+          Value: tailscale
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -73,6 +65,8 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-public-rt'
+        - Key: project
+          Value: tailscale
 
   PublicRoute:
     Type: AWS::EC2::Route
@@ -106,6 +100,8 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-sg'
+        - Key: project
+          Value: tailscale
 
   TailscaleRole:
     Type: AWS::IAM::Role
@@ -122,6 +118,8 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-role'
+        - Key: project
+          Value: tailscale
 
   TailscaleInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -141,7 +139,14 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
+          set -e
+          
+          # Update system
           yum update -y
+          
+          # Disable ECS agent to prevent registration attempts
+          systemctl stop ecs || true
+          systemctl disable ecs || true
           
           # Set hostname
           hostnamectl set-hostname ts-${AWS::Region}
@@ -157,21 +162,13 @@ Resources:
           # Start Tailscale and authenticate
           tailscale up --authkey=${TailscaleAuthKey} --advertise-exit-node --accept-routes
           
-          # Enable and start tailscaled service
-          systemctl enable tailscaled
-          systemctl start tailscaled
-          
-          # Install CloudWatch agent
-          yum install -y amazon-cloudwatch-agent
-          
-          # Signal completion
-          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource TailscaleInstance --region ${AWS::Region}
+          # Setup complete
       Tags:
         - Key: Name
           Value: !Sub 'ts-${AWS::Region}'
-    CreationPolicy:
-      ResourceSignal:
-        Timeout: PT10M
+        - Key: project
+          Value: tailscale
+
 
 Outputs:
   InstanceId:
