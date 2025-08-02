@@ -4,7 +4,7 @@ Cost-optimized, automated CloudFormation deployment for Tailscale exit nodes acr
 
 ## Features
 
-- **Cost Optimized**: Uses t4g.nano instances (~$3.04/month per region)
+- **Cost Optimized**: Uses t4g.nano instances (~$7.44/month per region)
 - **Internet Gateway**: No NAT Gateway costs (saves ~$45/month per region)
 - **Automated Setup**: Tailscale installed and registered automatically
 - **Multi-Region**: Deploy to any AWS regions you specify
@@ -141,7 +141,10 @@ Remove a deployment:
 
 - **EC2 t4g.nano**: ~$3.04/month
 - **EBS gp3 8GB**: ~$0.80/month
+- **IPv4 Public IP**: ~$3.60/month
 - **Data Transfer**: Variable (first 1GB free)
-- **Total**: ~$3.84/month per region
+- **VPC/Networking**: Free (within limits)
+- **CloudFormation**: Free
+- **Total**: ~$7.44/month per region (~£5.90/month)
 
-*Costs may vary by region and usage patterns*
+*Costs may vary by region and usage patterns. IPv4 pricing effective February 2024.*
