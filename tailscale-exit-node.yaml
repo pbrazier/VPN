@@ -17,6 +17,71 @@ Parameters:
     Type: AWS::EC2::Image::Id
     Description: 'ARM64 Amazon Linux 2023 AMI ID'
 
+Mappings:
+  RegionNames:
+    us-east-1:
+      Name: virginia
+    us-east-2:
+      Name: ohio
+    us-west-1:
+      Name: california
+    us-west-2:
+      Name: oregon
+    af-south-1:
+      Name: capetown
+    ap-east-1:
+      Name: hongkong
+    ap-south-1:
+      Name: mumbai
+    ap-south-2:
+      Name: hyderabad
+    ap-southeast-1:
+      Name: singapore
+    ap-southeast-2:
+      Name: sydney
+    ap-southeast-3:
+      Name: jakarta
+    ap-southeast-4:
+      Name: melbourne
+    ap-northeast-1:
+      Name: tokyo
+    ap-northeast-2:
+      Name: seoul
+    ap-northeast-3:
+      Name: osaka
+    ca-central-1:
+      Name: canada
+    ca-west-1:
+      Name: canadawest
+    eu-central-1:
+      Name: frankfurt
+    eu-central-2:
+      Name: zurich
+    eu-west-1:
+      Name: ireland
+    eu-west-2:
+      Name: london
+    eu-west-3:
+      Name: paris
+    eu-north-1:
+      Name: stockholm
+    eu-south-1:
+      Name: milan
+    eu-south-2:
+      Name: spain
+    il-central-1:
+      Name: telaviv
+    me-central-1:
+      Name: uae
+    me-south-1:
+      Name: bahrain
+    sa-east-1:
+      Name: saopaulo
+    us-gov-east-1:
+      Name: goveast
+    us-gov-west-1:
+      Name: govwest
+
 Resources:
   VPC:
     Type: AWS::EC2::VPC
@@ -137,35 +202,39 @@ Resources:
         - !Ref TailscaleSecurityGroup
       IamInstanceProfile: !Ref TailscaleInstanceProfile
       UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
-          set -e
-          
-          # Update system
-          yum update -y
-          
-          # Disable ECS agent to prevent registration attempts
-          systemctl stop ecs || true
-          systemctl disable ecs || true
-          
-          # Set hostname
-          hostnamectl set-hostname ts-${AWS::Region}
-          
-          # Install Tailscale
-          curl -fsSL https://tailscale.com/install.sh | sh
-          
-          # Enable IP forwarding
-          echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
-          echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.conf
-          sysctl -p
-          
-          # Start Tailscale and authenticate
-          tailscale up --authkey=${TailscaleAuthKey} --advertise-exit-node --accept-routes
-          
-          # Setup complete
+        Fn::Base64: !Sub 
+          - |
+            #!/bin/bash
+            set -e
+            
+            # Update system
+            yum update -y
+            
+            # Disable ECS agent to prevent registration attempts
+            systemctl stop ecs || true
+            systemctl disable ecs || true
+            
+            # Set hostname with friendly name
+            hostnamectl set-hostname ts-${RegionName}
+            
+            # Install Tailscale
+            curl -fsSL https://tailscale.com/install.sh | sh
+            
+            # Enable IP forwarding
+            echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
+            echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.conf
+            sysctl -p
+            
+            # Start Tailscale and authenticate
+            tailscale up --authkey=${TailscaleAuthKey} --advertise-exit-node --accept-routes
+            
+            # Setup complete
+          - RegionName: !FindInMap [RegionNames, !Ref 'AWS::Region', Name]
       Tags:
         - Key: Name
-          Value: !Sub 'ts-${AWS::Region}'
+          Value: !Sub 
+            - 'ts-${RegionName}'
+            - RegionName: !FindInMap [RegionNames, !Ref 'AWS::Region', Name]
         - Key: project
           Value: tailscale
 

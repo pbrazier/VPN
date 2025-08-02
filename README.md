@@ -51,6 +51,15 @@ Cost-optimized, automated CloudFormation deployment for Tailscale exit nodes acr
    tailscale status
    ```
 
+4. **Configure exit node** (required):
+   - Go to [Tailscale Admin Console](https://login.tailscale.com/admin/machines)
+   - Find your new node (e.g., `ts-virginia`)
+   - Click the node name to open settings
+   - Under "Exit node" section, check "Use as exit node"
+   - Click "Save"
+   - Under "General" section, click "Disable key expiry" to prevent automatic disconnection
+   - Click "Save"
+
 ## Configuration
 
 ### Instance Types (Monthly Cost Estimates)
@@ -70,7 +79,7 @@ Cost-optimized, automated CloudFormation deployment for Tailscale exit nodes acr
 
 - **VPC CIDR**: 192.168.100.0/24 (RFC1918 compliant)
 - **Single AZ**: Cost-optimized deployment
-- **Instance Names**: ts-{region} (e.g., ts-us-east-1)
+- **Instance Names**: ts-{friendly-name} (e.g., ts-virginia, ts-stockholm)
 
 ### Supported Regions
 
