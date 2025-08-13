@@ -40,16 +40,16 @@ provider "tailscale" {
 # Generate Tailscale auth key
 resource "tailscale_tailnet_key" "exit_node_key" {
   reusable      = false
-  ephemeral     = false
+  ephemeral     = true  # Device will be removed when key expires/deleted
   preauthorized = true
-  expiry        = 3600 # 1 hour - enough for deployment
+  expiry        = 86400 # 24 hours - long enough for deployment
   description   = "Auto-generated key for ${local.instance_name}"
   tags          = ["tag:awslightsail"]
 }
 
 # Wait for device to register, then enable as exit node
 data "tailscale_device" "exit_node" {
-  name       = local.instance_name  # Dynamic: ts-virginia, ts-ireland, etc.
+  hostname   = local.instance_name  # Use hostname which matches exactly
   wait_for   = "60s"
   depends_on = [aws_lightsail_instance.tailscale_exit_node]
 }
@@ -64,6 +64,12 @@ resource "tailscale_device_subnet_routes" "exit_node" {
   device_id = data.tailscale_device.exit_node.id
   routes    = ["0.0.0.0/0", "::/0"]
   depends_on = [tailscale_device_authorization.exit_node]
+}
+
+# Manage device lifecycle - will delete device when destroyed
+resource "tailscale_device_tags" "exit_node" {
+  device_id = data.tailscale_device.exit_node.id
+  tags      = ["tag:awslightsail"]
 }
 
 # User data script for Lightsail instance
