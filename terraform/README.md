@@ -12,23 +12,34 @@ Fully automated Terraform deployment for Tailscale exit nodes on AWS Lightsail u
 
 ## Prerequisites
 
-1. **Tailscale OAuth Client**: Create in [Tailscale Admin Console](https://login.tailscale.com/admin/settings/oauth)
+1. **Create Tailscale Tag**: In [Tailscale Admin Console](https://login.tailscale.com/admin/settings/acls)
+   - Go to Settings → Access Controls → Tags
+   - Create tag: `AwsLightsail`
+   - Set yourself as tag owner
+   - Note: "Terraform-managed AWS Lightsail exit nodes"
+
+2. **Tailscale OAuth Client**: Create in [Tailscale Admin Console](https://login.tailscale.com/admin/settings/oauth)
    - Go to Settings → OAuth clients
-   - Create new OAuth client
-   - Scopes needed: `devices:write`
+   - Click "Generate OAuth client"
+   - Description: "AwsLightsail"
+   - Required scopes:
+     - **Devices** → Write ✓
+     - **Auth Keys** → Write ✓
+     - **Device Invites** → Write ✓
+   - Tags: Select `tag:awslightsail`
    - Copy Client ID and Client Secret
 
-2. **AWS CLI**: Configured with Lightsail permissions
+3. **AWS CLI**: Configured with Lightsail permissions
 
-3. **Terraform**: Version 1.0+ installed
+4. **Terraform**: Version 1.0+ installed
 
 ## Setup
 
-1. **Configure Tailscale OAuth**:
+1. **Store Tailscale OAuth credentials** (one-time setup):
    ```bash
-   export TAILSCALE_API_KEY="your-oauth-client-secret"
-   export TAILSCALE_TAILNET="your-tailnet-name"
+   ./setup-credentials.sh
    ```
+   This stores your OAuth credentials securely in AWS SSM Parameter Store.
 
 2. **Configure variables**:
    ```bash
@@ -66,9 +77,11 @@ terraform destroy
 
 - **State Management**: Terraform tracks infrastructure state
 - **OAuth Security**: No manual key handling or expiration concerns
+- **Secure Credential Storage**: OAuth credentials stored in AWS SSM (free)
 - **Idempotent**: Safe to re-run, only changes what's needed
 - **Multi-Region**: Easy workspace management for multiple deployments
 - **Version Control**: Infrastructure changes tracked in git
+- **No Environment Variables**: Credentials managed by AWS, not shell
 
 ## Cost
 

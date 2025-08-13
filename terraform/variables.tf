@@ -13,3 +13,16 @@ variable "instance_name" {
     error_message = "Instance name must start with 'ts-' followed by lowercase letters only."
   }
 }
+
+variable "tailscale_api_key" {
+  description = "Tailscale OAuth API key (only needed for initial credential setup)"
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "tailscale_tailnet" {
+  description = "Tailscale tailnet name (only needed for initial credential setup)"
+  type        = string
+  default     = null
+}

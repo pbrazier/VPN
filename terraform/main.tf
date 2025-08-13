@@ -16,7 +16,8 @@ provider "aws" {
 }
 
 provider "tailscale" {
-  # Uses TAILSCALE_API_KEY and TAILSCALE_TAILNET environment variables
+  api_key = data.aws_ssm_parameter.tailscale_api_key.value
+  tailnet = data.aws_ssm_parameter.tailscale_tailnet.value
 }
 
 # Generate Tailscale auth key
@@ -26,7 +27,7 @@ resource "tailscale_tailnet_key" "exit_node_key" {
   preauthorized = true
   expiry        = 3600 # 1 hour - enough for deployment
   description   = "Auto-generated key for ${var.instance_name}"
-  tags          = ["tag:exitnode"]
+  tags          = ["tag:AwsLightsail"]
 }
 
 # User data script for Lightsail instance
