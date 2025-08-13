@@ -20,42 +20,40 @@ cd lightsail
 
 ## Implementation Options
 
-### 1. Lightsail (Recommended) - `lightsail/`
+### 1. Terraform (Recommended) - `terraform/`
 - **Cost**: ~$3.50/month per region
-- **Deployment**: Simple bash scripts
-- **Infrastructure**: Managed Lightsail instances
-- **Security**: Automatic firewall configuration
+- **Deployment**: Fully automated with enterprise features
+- **Infrastructure**: Lightsail with S3 backend state management
+- **Security**: OAuth integration and encrypted state
+- **Features**: Multi-region workspaces, automatic exit node configuration
 
-### 2. EC2 (Superseded) - `ec2-superseded/`
-- **Cost**: ~$7.44/month per region  
-- **Deployment**: CloudFormation templates
-- **Infrastructure**: Custom VPC setup
-- **Status**: Superseded by Lightsail implementation
+### 2. Legacy Implementations - `superseded/`
+- **Lightsail Bash**: Simple bash scripts (superseded by Terraform)
+- **EC2 CloudFormation**: Custom VPC setup (superseded by Lightsail)
+- **Status**: Maintained for reference but not recommended for new deployments
 
-## Quick Start (Lightsail)
+## Quick Start (Terraform - Recommended)
 
-1. **Navigate to Lightsail folder**:
+1. **Navigate to Terraform folder**:
    ```bash
-   cd lightsail
+   cd terraform
    ```
 
 2. **Deploy to a region**:
    ```bash
-   ./deploy-lightsail.sh
+   ./deploy.sh
    ```
-   - Prompts for Tailscale auth key
-   - Select from available Lightsail regions
-   - Automatically configures security
+   - Automatically sets up S3 backend (first run)
+   - Prompts for Tailscale OAuth credentials (first run)
+   - Select from available regions
+   - **Automatically configures exit node** - no manual steps!
 
-3. **Configure exit node** (required):
-   - Go to [Tailscale Admin Console](https://login.tailscale.com/admin/machines)
-   - Find your new node (e.g., `ts-virginia`)
-   - Enable "Use as exit node" and disable key expiry
-
-4. **Remove deployment**:
+3. **Remove deployment**:
    ```bash
-   ./cleanup-lightsail.sh
+   ./cleanup.sh
    ```
+
+**Legacy Quick Start** (superseded implementations in `superseded/` folder)
 
 ## Prerequisites
 
@@ -65,26 +63,28 @@ cd lightsail
 ## Folder Structure
 
 ```
-├── lightsail/              # Recommended implementation
-│   ├── deploy-lightsail.sh  # Interactive deployment
-│   ├── cleanup-lightsail.sh # Interactive cleanup
-│   └── README-lightsail.md  # Detailed documentation
+├── terraform/              # Recommended implementation
+│   ├── deploy.sh            # Main deployment script
+│   ├── cleanup.sh           # Cleanup script
+│   ├── main.tf              # Core infrastructure
+│   ├── scripts/             # All executable scripts
+│   ├── modules/             # Terraform modules
+│   └── README.md            # Detailed documentation
 │
-├── ec2-superseded/         # Legacy implementation
-│   ├── deploy-interactive.sh
-│   ├── cleanup-interactive.sh
-│   ├── tailscale-exit-node.yaml
-│   └── README.md           # Migration guidance
+├── superseded/             # Legacy implementations
+│   ├── lightsail/           # Bash script implementation
+│   └── ec2-superseded/      # CloudFormation implementation
 │
-└── README.md              # This file
+└── README.md               # This file
 ```
 
 ## Cost Comparison
 
 | Implementation | Monthly Cost | Includes |
 |---------------|-------------|----------|
-| **Lightsail** (Recommended) | **$3.50** | Instance + IPv4 + 1TB bandwidth + 20GB SSD |
+| **Terraform** (Recommended) | **$3.52** | Instance + IPv4 + 1TB bandwidth + 20GB SSD + S3 backend |
+| Lightsail Bash (Superseded) | $3.50 | Instance + IPv4 + 1TB bandwidth + 20GB SSD |
 | EC2 (Superseded) | $7.44 | Instance + IPv4 (separate charges) |
-| **Savings** | **53%** | Fixed predictable pricing |
+| **Enterprise Features** | **+$0.02** | S3 backend, DynamoDB locking, OAuth, multi-region |
 
-*Lightsail pricing is fixed and predictable. EC2 costs may vary by region and usage patterns.*
+*Terraform implementation adds enterprise-grade features for minimal additional cost.*
