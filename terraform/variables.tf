@@ -35,5 +35,3 @@ locals {
   instance_name = "ts-${var.region}"
 }
 
-
-

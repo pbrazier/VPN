@@ -27,8 +27,6 @@ data "aws_ssm_parameter" "tailscale_client_secret" {
   name     = "/tailscale/oauth/client_secret"
 }
 
-
-
 provider "tailscale" {
   api_key = data.aws_ssm_parameter.tailscale_client_secret.value
 }
@@ -40,19 +38,7 @@ resource "tailscale_tailnet_key" "exit_node_key" {
   preauthorized = true
   expiry        = 3600 # 1 hour - enough for deployment
   description   = "Auto-generated key for ${local.instance_name}"
-  tags          = ["tag:awslightsail"]
-}
-
-# Wait for device to register, then enable as exit node
-data "tailscale_device" "exit_node" {
-  name       = local.instance_name
-  wait_for   = "60s"
-  depends_on = [aws_lightsail_instance.tailscale_exit_node]
-}
-
-resource "tailscale_device_subnet_routes" "exit_node" {
-  device_id = data.tailscale_device.exit_node.id
-  routes    = ["0.0.0.0/0", "::/0"]
+  # tags          = ["tag:awslightsail"] # Removed to test permissions
 }
 
 # User data script for Lightsail instance
