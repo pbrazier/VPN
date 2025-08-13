@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# TODO: Cleanup script still not properly destroying AWS Lightsail instances
+# Issue: Normal destroy fails due to Tailscale dependencies, targeted destroy not working
+# Need to fix dependency order and ensure AWS resources are actually removed
+# Current workaround: Use cleanup-orphaned.sh for stuck instances
+
 export AWS_PROFILE=PBCT-Development
 
 echo "Tailscale Exit Node Cleanup"
@@ -59,24 +64,30 @@ echo
 echo "🔥 DESTROYING ALL RESOURCES..."
 echo "================================"
 
-# Method 1: Try normal destroy
-echo "Step 1: Attempting normal destroy..."
-if terraform destroy -auto-approve; then
-    echo "✅ Normal destroy successful"
+# Method 1: Destroy AWS resources first (most reliable)
+echo "Step 1: Destroying AWS resources..."
+terraform destroy -auto-approve \
+    -target=aws_lightsail_instance_public_ports.tailscale_exit_node_ports \
+    -target=aws_lightsail_instance.tailscale_exit_node
+
+if [ $? -eq 0 ]; then
+    echo "✅ AWS resources destroyed successfully"
 else
-    echo "⚠️  Normal destroy failed, trying targeted approach..."
-    
-    # Method 2: Destroy AWS resources first
-    echo "Step 2: Destroying AWS resources..."
-    terraform destroy -auto-approve \
-        -target=aws_lightsail_instance_public_ports.tailscale_exit_node_ports \
-        -target=aws_lightsail_instance.tailscale_exit_node \
-        2>/dev/null || echo "AWS destroy completed/failed"
-    
-    # Method 3: Destroy remaining resources
-    echo "Step 3: Destroying remaining resources..."
-    terraform destroy -auto-approve 2>/dev/null || echo "Remaining destroy completed/failed"
+    echo "⚠️  AWS destroy failed, continuing with remaining resources..."
 fi
+
+# Method 2: Destroy Tailscale resources
+echo "Step 2: Destroying Tailscale resources..."
+terraform destroy -auto-approve \
+    -target=tailscale_device_subnet_routes.exit_node \
+    -target=tailscale_device_authorization.exit_node \
+    -target=tailscale_device_tags.exit_node \
+    -target=tailscale_tailnet_key.exit_node_key \
+    2>/dev/null || echo "Tailscale destroy completed/failed"
+
+# Method 3: Final cleanup - destroy anything remaining
+echo "Step 3: Final cleanup..."
+terraform destroy -auto-approve 2>/dev/null || echo "Final destroy completed/failed"
 
 # Method 4: Nuclear option - remove from state if still exists
 REMAINING=$(terraform state list 2>/dev/null || echo "")
