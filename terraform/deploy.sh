@@ -8,8 +8,9 @@ echo "Tailscale Exit Node Deployment"
 echo "=============================="
 
 # Check if credentials exist
-if ! aws ssm get-parameter --name "/tailscale/oauth/client_secret" --region "eu-west-2" >/dev/null 2>&1; then
-    echo "⚠️  Tailscale credentials not found. Setting up first..."
+if ! aws ssm get-parameter --name "/tailscale/oauth/client_id" --region "eu-west-2" >/dev/null 2>&1 || \
+   ! aws ssm get-parameter --name "/tailscale/oauth/client_secret" --region "eu-west-2" >/dev/null 2>&1; then
+    echo "⚠️  Tailscale OAuth credentials not found. Setting up first..."
     ./setup-credentials.sh
     echo
 fi

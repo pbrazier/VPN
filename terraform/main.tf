@@ -6,7 +6,7 @@ terraform {
     }
     tailscale = {
       source  = "tailscale/tailscale"
-      version = "~> 0.15"
+      version = "~> 0.16"
     }
   }
 }
@@ -22,13 +22,19 @@ provider "aws" {
 }
 
 # Read existing credentials from London region
+data "aws_ssm_parameter" "tailscale_client_id" {
+  provider = aws.london
+  name     = "/tailscale/oauth/client_id"
+}
+
 data "aws_ssm_parameter" "tailscale_client_secret" {
   provider = aws.london
   name     = "/tailscale/oauth/client_secret"
 }
 
 provider "tailscale" {
-  api_key = data.aws_ssm_parameter.tailscale_client_secret.value
+  oauth_client_id     = data.aws_ssm_parameter.tailscale_client_id.value
+  oauth_client_secret = data.aws_ssm_parameter.tailscale_client_secret.value
 }
 
 # Generate Tailscale auth key
@@ -38,7 +44,7 @@ resource "tailscale_tailnet_key" "exit_node_key" {
   preauthorized = true
   expiry        = 3600 # 1 hour - enough for deployment
   description   = "Auto-generated key for ${local.instance_name}"
-  # tags          = ["tag:awslightsail"] # Removed to test permissions
+  tags          = ["tag:awslightsail"]
 }
 
 # User data script for Lightsail instance

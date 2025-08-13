@@ -37,7 +37,7 @@ Fully automated Terraform deployment for Tailscale exit nodes on AWS Lightsail u
   - **Keys**:
     - **Auth Keys** → Write ✓
 - Tags: Select `tag:awslightsail`
-- Copy **Client Secret** (not Client ID - we only need the secret)
+- Copy both **Client ID** and **Client Secret** (you'll need both for OAuth authentication)
 
 ## Quick Start
 

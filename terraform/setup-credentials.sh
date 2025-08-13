@@ -4,9 +4,10 @@ set -e
 echo "Setting up Tailscale OAuth credentials in AWS SSM Parameter Store..."
 
 # Check if credentials are already stored in London region
-if aws ssm get-parameter --name "/tailscale/oauth/client_secret" --region "eu-west-2" >/dev/null 2>&1; then
+if aws ssm get-parameter --name "/tailscale/oauth/client_id" --region "eu-west-2" >/dev/null 2>&1 && \
+   aws ssm get-parameter --name "/tailscale/oauth/client_secret" --region "eu-west-2" >/dev/null 2>&1; then
     echo "Credentials already exist in SSM."
-    read -p "Update with new Client Secret? (y/n): " update_choice
+    read -p "Update with new OAuth credentials? (y/n): " update_choice
     if [ "$update_choice" != "y" ]; then
         echo "Keeping existing credentials."
         exit 0
@@ -14,6 +15,8 @@ if aws ssm get-parameter --name "/tailscale/oauth/client_secret" --region "eu-we
 fi
 
 # Prompt for credentials
+read -s -p "Enter Tailscale OAuth Client ID: " TAILSCALE_CLIENT_ID
+echo
 read -s -p "Enter Tailscale OAuth Client Secret: " TAILSCALE_CLIENT_SECRET
 echo
 
@@ -29,7 +32,9 @@ fi
 echo "Storing credentials in AWS SSM Parameter Store (London region)..."
 
 # Store credentials using Terraform
-terraform apply -auto-approve -var="tailscale_client_secret=$TAILSCALE_CLIENT_SECRET"
+terraform apply -auto-approve \
+    -var="tailscale_client_id=$TAILSCALE_CLIENT_ID" \
+    -var="tailscale_client_secret=$TAILSCALE_CLIENT_SECRET"
 
 echo "✅ Credentials stored successfully!"
 cd ..
