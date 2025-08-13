@@ -1,0 +1,22 @@
+# Terraform files
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfvars
+**/*.tfplan
+**/terraform.tfstate*
+
+# Backend configuration (contains bucket name)
+**/.backend-config
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log

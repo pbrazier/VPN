@@ -169,19 +169,25 @@ terraform destroy
 
 ```
 terraform/
-├── deploy.sh              # Main deployment script
-├── cleanup.sh             # Robust cleanup script
-├── setup-credentials.sh   # OAuth credential setup
+├── deploy.sh              # Main deployment script (wrapper)
+├── cleanup.sh             # Cleanup script (wrapper)
 ├── main.tf                # Core infrastructure
 ├── variables.tf           # Region mappings and variables
 ├── outputs.tf             # Deployment outputs
-├── user-data.sh           # Instance initialization script
 ├── backend.tf             # S3 backend configuration
-├── backend-setup/         # Backend infrastructure setup
-│   └── main.tf
-├── credentials/           # OAuth credential management
-│   └── main.tf
-└── .gitignore            # Git ignore patterns
+├── scripts/               # All executable scripts
+│   ├── deploy.sh          # Main deployment logic
+│   ├── cleanup.sh         # Robust cleanup script
+│   ├── cleanup-orphaned.sh # Orphaned resource cleanup
+│   ├── setup-credentials.sh # OAuth credential setup
+│   ├── manage.sh          # Workspace management
+│   └── user-data.sh       # Instance initialization script
+├── modules/               # Terraform modules
+│   ├── backend-setup/     # Backend infrastructure setup
+│   │   └── main.tf
+│   └── credentials/       # OAuth credential management
+│       └── main.tf
+└── ../.gitignore         # Git ignore patterns (root level)
 ```
 
 ## Security Notes

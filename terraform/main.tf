@@ -74,7 +74,7 @@ resource "tailscale_device_tags" "exit_node" {
 
 # User data script for Lightsail instance
 locals {
-  user_data = templatefile("${path.module}/user-data.sh", {
+  user_data = templatefile("${path.module}/scripts/user-data.sh", {
     instance_name = local.instance_name
     auth_key     = tailscale_tailnet_key.exit_node_key.key
   })

@@ -21,7 +21,7 @@ read -s -p "Enter Tailscale OAuth Client Secret: " TAILSCALE_CLIENT_SECRET
 echo
 
 # Navigate to credentials directory
-cd credentials
+cd modules/credentials
 
 # Initialize Terraform if needed
 if [ ! -d ".terraform" ]; then

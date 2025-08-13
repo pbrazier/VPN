@@ -14,6 +14,11 @@ variable "region" {
   }
 }
 
+# TODO: Sort out correct region support for Lightsail as they are not all listed
+# Maybe Terraform could fetch them similar to how we did it in the CloudFormation deployment
+# Reference: /Users/paul/Documents/snap1-code-repos/VPN/lightsail
+# Need to dynamically fetch available Lightsail regions instead of hardcoded list
+
 # Map friendly names to AWS regions
 locals {
   region_map = {
