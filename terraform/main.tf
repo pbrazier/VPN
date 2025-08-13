@@ -12,12 +12,25 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region = local.aws_region
 }
 
+# Provider for London region (master credential storage)
+provider "aws" {
+  alias  = "london"
+  region = "eu-west-2"
+}
+
+# Read existing credentials from London region
+data "aws_ssm_parameter" "tailscale_client_secret" {
+  provider = aws.london
+  name     = "/tailscale/oauth/client_secret"
+}
+
+
+
 provider "tailscale" {
-  api_key = data.aws_ssm_parameter.tailscale_api_key.value
-  tailnet = data.aws_ssm_parameter.tailscale_tailnet.value
+  api_key = data.aws_ssm_parameter.tailscale_client_secret.value
 }
 
 # Generate Tailscale auth key
@@ -26,22 +39,34 @@ resource "tailscale_tailnet_key" "exit_node_key" {
   ephemeral     = false
   preauthorized = true
   expiry        = 3600 # 1 hour - enough for deployment
-  description   = "Auto-generated key for ${var.instance_name}"
-  tags          = ["tag:AwsLightsail"]
+  description   = "Auto-generated key for ${local.instance_name}"
+  tags          = ["tag:awslightsail"]
+}
+
+# Wait for device to register, then enable as exit node
+data "tailscale_device" "exit_node" {
+  name       = local.instance_name
+  wait_for   = "60s"
+  depends_on = [aws_lightsail_instance.tailscale_exit_node]
+}
+
+resource "tailscale_device_subnet_routes" "exit_node" {
+  device_id = data.tailscale_device.exit_node.id
+  routes    = ["0.0.0.0/0", "::/0"]
 }
 
 # User data script for Lightsail instance
 locals {
   user_data = templatefile("${path.module}/user-data.sh", {
-    instance_name = var.instance_name
+    instance_name = local.instance_name
     auth_key     = tailscale_tailnet_key.exit_node_key.key
   })
 }
 
 # Lightsail instance
 resource "aws_lightsail_instance" "tailscale_exit_node" {
-  name              = var.instance_name
-  availability_zone = "${var.aws_region}a"
+  name              = local.instance_name
+  availability_zone = "${local.aws_region}a"
   blueprint_id      = "amazon_linux_2023"
   bundle_id         = "nano_3_0"
   user_data         = local.user_data

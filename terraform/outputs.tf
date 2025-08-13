@@ -9,8 +9,13 @@ output "public_ip" {
 }
 
 output "region" {
+  description = "Friendly region name"
+  value       = var.region
+}
+
+output "aws_region" {
   description = "AWS region where instance was created"
-  value       = var.aws_region
+  value       = local.aws_region
 }
 
 output "monthly_cost" {

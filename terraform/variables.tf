@@ -1,28 +1,39 @@
-variable "aws_region" {
-  description = "AWS region for Lightsail instance"
+# Region selection with friendly names
+variable "region" {
+  description = "Friendly region name for deployment"
   type        = string
-  default     = "us-east-1"
-}
-
-variable "instance_name" {
-  description = "Name for the Lightsail instance"
-  type        = string
+  default     = "virginia"
   
   validation {
-    condition     = can(regex("^ts-[a-z]+$", var.instance_name))
-    error_message = "Instance name must start with 'ts-' followed by lowercase letters only."
+    condition = contains([
+      "virginia", "ohio", "oregon", "ireland", 
+      "london", "paris", "frankfurt", "singapore", 
+      "sydney", "tokyo", "mumbai", "canada"
+    ], var.region)
+    error_message = "Region must be one of: virginia, ohio, oregon, ireland, london, paris, frankfurt, singapore, sydney, tokyo, mumbai, canada."
   }
 }
 
-variable "tailscale_api_key" {
-  description = "Tailscale OAuth API key (only needed for initial credential setup)"
-  type        = string
-  sensitive   = true
-  default     = null
+# Map friendly names to AWS regions
+locals {
+  region_map = {
+    virginia   = "us-east-1"
+    ohio       = "us-east-2"
+    oregon     = "us-west-2"
+    ireland    = "eu-west-1"
+    london     = "eu-west-2"
+    paris      = "eu-west-3"
+    frankfurt  = "eu-central-1"
+    singapore  = "ap-southeast-1"
+    sydney     = "ap-southeast-2"
+    tokyo      = "ap-northeast-1"
+    mumbai     = "ap-south-1"
+    canada     = "ca-central-1"
+  }
+  
+  aws_region    = local.region_map[var.region]
+  instance_name = "ts-${var.region}"
 }
 
-variable "tailscale_tailnet" {
-  description = "Tailscale tailnet name (only needed for initial credential setup)"
-  type        = string
-  default     = null
-}
+
+
