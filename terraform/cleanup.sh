@@ -12,15 +12,17 @@ fi
 
 # List available workspaces (regions)
 echo "Available deployments:"
-terraform workspace list | grep -v "^\*" | sed 's/^  //'
+terraform workspace list | grep -v "^\\*" | sed 's/^  //'
 echo
 echo "Current workspace: $(terraform workspace show)"
 
 # Show current deployment
-if terraform show >/dev/null 2>&1; then
+if terraform state list >/dev/null 2>&1 && [ "$(terraform state list | wc -l)" -gt 0 ]; then
     echo
     echo "Current deployment details:"
     terraform output 2>/dev/null || echo "No outputs available"
+else
+    echo "No resources found in current workspace"
 fi
 
 echo
@@ -32,11 +34,17 @@ fi
 
 WORKSPACE=$(terraform workspace show)
 echo "Destroying deployment in workspace: $WORKSPACE"
-terraform destroy
+
+# Destroy with auto-approve to avoid manual confirmation
+terraform destroy -auto-approve
+
+echo "✅ Resources destroyed successfully"
 
 # Switch back to default and delete workspace if not default
 if [ "$WORKSPACE" != "default" ]; then
     terraform workspace select default
     terraform workspace delete "$WORKSPACE"
-    echo "Workspace $WORKSPACE deleted"
+    echo "✅ Workspace $WORKSPACE deleted"
 fi
+
+echo "✅ Cleanup complete!"
