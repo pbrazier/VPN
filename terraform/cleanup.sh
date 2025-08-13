@@ -35,7 +35,14 @@ fi
 WORKSPACE=$(terraform workspace show)
 echo "Destroying deployment in workspace: $WORKSPACE"
 
-# Destroy with auto-approve to avoid manual confirmation
+# First destroy AWS resources (these usually work)
+echo "⚙️  Destroying AWS resources first..."
+terraform destroy -auto-approve \
+    -target=aws_lightsail_instance_public_ports.tailscale_exit_node_ports \
+    -target=aws_lightsail_instance.tailscale_exit_node
+
+# Then destroy remaining Tailscale resources
+echo "⚙️  Destroying remaining Tailscale resources..."
 terraform destroy -auto-approve
 
 echo "✅ Resources destroyed successfully"

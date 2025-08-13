@@ -49,14 +49,21 @@ resource "tailscale_tailnet_key" "exit_node_key" {
 
 # Wait for device to register, then enable as exit node
 data "tailscale_device" "exit_node" {
-  name       = local.instance_name
+  name       = local.instance_name  # Dynamic: ts-virginia, ts-ireland, etc.
   wait_for   = "60s"
   depends_on = [aws_lightsail_instance.tailscale_exit_node]
+}
+
+# Auto-approve and configure exit node
+resource "tailscale_device_authorization" "exit_node" {
+  device_id  = data.tailscale_device.exit_node.id
+  authorized = true
 }
 
 resource "tailscale_device_subnet_routes" "exit_node" {
   device_id = data.tailscale_device.exit_node.id
   routes    = ["0.0.0.0/0", "::/0"]
+  depends_on = [tailscale_device_authorization.exit_node]
 }
 
 # User data script for Lightsail instance

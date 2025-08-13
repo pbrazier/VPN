@@ -61,11 +61,12 @@ The script handles everything: credential setup, region selection, deployment, a
 ```
 
 The script automatically:
-- Prompts for Tailscale Client Secret (first run only)
+- Sets up S3 backend with state locking (first run only)
+- Prompts for Tailscale OAuth credentials (first run only)
 - Shows interactive region menu (12 regions available)
 - Creates workspace for each region
 - Deploys exit node with auto-generated name (`ts-virginia`, `ts-london`, etc.)
-- Enables exit node routing
+- Enables exit node routing with Tailscale provider
 
 **That's it!** The exit node is automatically:
 - Registered with your tailnet
@@ -79,6 +80,8 @@ The script automatically:
 - **Cost Optimized**: ~$3.50/month per region using Lightsail nano instances
 - **Multi-Region Management**: Independent workspace per region
 - **Auto-configured**: Exit node ready immediately after deployment
+- **Secure State Management**: S3 backend with DynamoDB locking and encryption
+- **One-Command Setup**: Automatically configures backend infrastructure
 
 **Available Regions:**
 `virginia`, `ohio`, `oregon`, `ireland`, `london`, `paris`, `frankfurt`, `singapore`, `sydney`, `tokyo`, `mumbai`, `canada`
@@ -87,11 +90,26 @@ The script automatically:
 - Each region uses its own Terraform workspace
 - Deploy/destroy regions independently
 - Use `./manage.sh` to switch between regions or view all deployments
+- All workspaces share the same S3 backend for centralized state management
+
+## Backend Infrastructure
+
+The deployment automatically creates:
+- **S3 Bucket**: Encrypted storage for Terraform state files
+- **DynamoDB Table**: State locking to prevent concurrent modifications
+- **Versioning**: Point-in-time recovery for state files
+- **Security**: Private bucket with encryption at rest
+
+**Backend Components:**
+- `backend-setup/` - Terraform configuration for backend infrastructure
+- `.backend-config` - Generated configuration file (git-ignored)
+- State files stored as: `s3://bucket/tailscale-exit-nodes/terraform.tfstate`
 
 ## Cost
 
 - **Monthly**: ~$3.50 per region (same as bash deployment)
 - **Includes**: Instance + IPv4 + 1TB bandwidth + 20GB SSD
+- **Backend**: ~$0.02/month (S3 + DynamoDB for state management)
 
 
 
@@ -101,7 +119,15 @@ The script automatically:
 
 For advanced users who prefer manual control:
 
-**Setup:**
+**Backend Management:**
+```bash
+# Backend is automatically set up on first deployment
+# To manually set up backend infrastructure:
+cd backend-setup
+terraform init && terraform apply
+```
+
+**Credential Management:**
 ```bash
 # Store credentials manually (optional - deploy.sh does this automatically)
 ./setup-credentials.sh
@@ -123,10 +149,12 @@ terraform destroy
 
 ## Advantages over Bash Scripts
 
-- **State Management**: Terraform tracks infrastructure state
+- **State Management**: Terraform tracks infrastructure state in encrypted S3
+- **State Locking**: DynamoDB prevents concurrent modifications
 - **OAuth Security**: No manual key handling or expiration concerns
-- **Secure Credential Storage**: OAuth credentials stored in AWS SSM (free)
+- **Secure Credential Storage**: OAuth credentials stored in AWS SSM Parameter Store
+- **Backup & Recovery**: Versioned state files with point-in-time recovery
 - **Idempotent**: Safe to re-run, only changes what's needed
 - **Multi-Region**: Easy workspace management for multiple deployments
 - **Version Control**: Infrastructure changes tracked in git
-- **No Environment Variables**: Credentials managed by AWS, not shell
+- **Enterprise Ready**: Remote state, locking, and team collaboration support

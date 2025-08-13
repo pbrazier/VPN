@@ -1,11 +1,9 @@
-# Terraform
-*.tfstate
-*.tfstate.*
+# Terraform files
 .terraform/
 .terraform.lock.hcl
 terraform.tfvars
 *.tfplan
+terraform.tfstate*
 
-# OS
-.DS_Store
-Thumbs.db
+# Backend configuration (contains bucket name)
+.backend-config
