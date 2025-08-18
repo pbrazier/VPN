@@ -64,6 +64,13 @@ echo
 echo "🔥 DESTROYING ALL RESOURCES..."
 echo "================================"
 
+#TODO Test and fix removal of terraform resources as terraform destroy doesn't actually remove resources
+# Why: Current terraform destroy fails to properly remove AWS Lightsail instances due to dependency issues and Tailscale resource conflicts. This leaves orphaned resources that continue billing.
+# What to do: • Test actual resource removal in AWS console after terraform destroy • Add verification checks for AWS resource deletion • Implement retry logic for failed destroys • Add manual AWS CLI cleanup as fallback • Test dependency ordering between Tailscale and AWS resources
+# Where: /Users/paul/Documents/snap1-code-repos/VPN/terraform/scripts/cleanup.sh:65-85
+# Notes: Existing workaround uses cleanup-orphaned.sh for stuck instances. May need to separate Tailscale cleanup from AWS cleanup entirely.
+# Added: 2025-08-18 by Q
+
 # Method 1: Destroy AWS resources first (most reliable)
 echo "Step 1: Destroying AWS resources..."
 terraform destroy -auto-approve \
