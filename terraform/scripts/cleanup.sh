@@ -83,14 +83,14 @@ else
     echo "⚠️  AWS destroy failed, continuing with remaining resources..."
 fi
 
-# Method 2: Destroy Tailscale resources
-echo "Step 2: Destroying Tailscale resources..."
-terraform destroy -auto-approve \
-    -target=tailscale_device_subnet_routes.exit_node \
-    -target=tailscale_device_authorization.exit_node \
-    -target=tailscale_device_tags.exit_node \
-    -target=tailscale_tailnet_key.exit_node_key \
-    2>/dev/null || echo "Tailscale destroy completed/failed"
+# Method 2: Remove Tailscale resources from state (device may already be gone)
+echo "Step 2: Cleaning up Tailscale resources..."
+for resource in "tailscale_device_subnet_routes.exit_node" "tailscale_device_authorization.exit_node" "tailscale_device_tags.exit_node" "tailscale_tailnet_key.exit_node_key"; do
+    if terraform state list | grep -q "$resource"; then
+        echo "Removing $resource from state..."
+        terraform state rm "$resource" 2>/dev/null || echo "Failed to remove $resource"
+    fi
+done
 
 # Method 3: Final cleanup - destroy anything remaining
 echo "Step 3: Final cleanup..."

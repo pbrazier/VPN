@@ -8,6 +8,10 @@ terraform {
       source  = "tailscale/tailscale"
       version = "~> 0.16"
     }
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.0"
+    }
   }
 }
 
@@ -93,7 +97,16 @@ resource "aws_lightsail_instance" "tailscale_exit_node" {
   }
 }
 
-# Close unnecessary ports for security
+# Get current public IP for SSH access restriction
+data "http" "current_ip" {
+  url = "https://ipv4.icanhazip.com"
+}
+
+locals {
+  current_ip = chomp(data.http.current_ip.response_body)
+}
+
+# Restrict SSH to current IP only, block HTTP entirely
 resource "aws_lightsail_instance_public_ports" "tailscale_exit_node_ports" {
   instance_name = aws_lightsail_instance.tailscale_exit_node.name
 
@@ -101,6 +114,9 @@ resource "aws_lightsail_instance_public_ports" "tailscale_exit_node_ports" {
     from_port = 22
     to_port   = 22
     protocol  = "tcp"
-    cidrs     = ["0.0.0.0/0"]  # Lightsail browser SSH only
+    cidrs     = ["${local.current_ip}/32"]  # Only current IP
   }
+  
+  # No HTTP port configured = blocked
+  # Tailscale connects outbound only
 }

@@ -2,7 +2,7 @@
 set -e
 
 # Available regions
-REGIONS=("virginia" "ohio" "oregon" "ireland" "london" "paris" "frankfurt" "singapore" "sydney" "tokyo" "mumbai" "canada")
+REGIONS=("virginia" "ohio" "oregon" "ireland" "london" "paris" "frankfurt" "singapore" "sydney" "tokyo" "mumbai" "canada" "stockholm")
 
 echo "Tailscale Exit Node Deployment"
 echo "=============================="
@@ -119,9 +119,16 @@ terraform init -backend-config=.backend-config
 echo "⚙️  Setting up workspace: $REGION"
 terraform workspace select "$REGION" 2>/dev/null || terraform workspace new "$REGION"
 
+# Create workspace-specific tfvars file to persist region setting
+echo "⚙️  Creating workspace configuration..."
+cat > terraform.tfvars << EOF
+region = "$REGION"
+EOF
+echo "✅ Region '$REGION' saved to terraform.tfvars"
+
 # Deploy
 echo "⚙️  Deploying exit node..."
-terraform apply -auto-approve -var="region=$REGION"
+terraform apply -auto-approve
 
 echo
 echo "✅ Deployment complete! Exit node ts-$REGION is ready to use."

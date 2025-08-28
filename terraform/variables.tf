@@ -8,9 +8,9 @@ variable "region" {
     condition = contains([
       "virginia", "ohio", "oregon", "ireland", 
       "london", "paris", "frankfurt", "singapore", 
-      "sydney", "tokyo", "mumbai", "canada"
+      "sydney", "tokyo", "mumbai", "canada", "stockholm"
     ], var.region)
-    error_message = "Region must be one of: virginia, ohio, oregon, ireland, london, paris, frankfurt, singapore, sydney, tokyo, mumbai, canada."
+    error_message = "Region must be one of: virginia, ohio, oregon, ireland, london, paris, frankfurt, singapore, sydney, tokyo, mumbai, canada, stockholm."
   }
 }
 
@@ -34,6 +34,7 @@ locals {
     tokyo      = "ap-northeast-1"
     mumbai     = "ap-south-1"
     canada     = "ca-central-1"
+    stockholm  = "eu-north-1"
   }
   
   aws_region    = local.region_map[var.region]
