@@ -12,7 +12,18 @@ echo
 # COLLECT ALL USER INPUTS FIRST
 # =============================================================================
 
+# Check AWS authentication first
+echo "🔐 Checking AWS authentication..."
+if ! aws sts get-caller-identity >/dev/null 2>&1; then
+    echo "❌ AWS authentication failed. Please run 'aws configure' or set up your AWS credentials."
+    echo "   You can also set AWS_PROFILE environment variable if using profiles."
+    exit 1
+fi
+echo "✅ AWS authentication verified"
+echo
+
 # Check if credentials exist and collect if needed
+echo "🔑 Checking Tailscale OAuth credentials..."
 NEED_CREDENTIALS=false
 if ! aws ssm get-parameter --name "/tailscale/oauth/client_id" --region "eu-west-2" >/dev/null 2>&1 || \
    ! aws ssm get-parameter --name "/tailscale/oauth/client_secret" --region "eu-west-2" >/dev/null 2>&1; then
@@ -25,7 +36,10 @@ if ! aws ssm get-parameter --name "/tailscale/oauth/client_id" --region "eu-west
     read -s -p "Enter Tailscale OAuth Client Secret: " TAILSCALE_CLIENT_SECRET
     echo
     echo
+else
+    echo "✅ Tailscale credentials found in Parameter Store"
 fi
+echo
 
 # Region selection
 echo "Select deployment region:"
