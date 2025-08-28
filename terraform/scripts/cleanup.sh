@@ -40,6 +40,22 @@ if [ -z "$RESOURCES" ]; then
     exit 0
 fi
 
+# Check if Lightsail instance was manually deleted
+INSTANCE_IN_STATE=$(terraform state list | grep "aws_lightsail_instance.tailscale_exit_node" || echo "")
+if [ -n "$INSTANCE_IN_STATE" ]; then
+    INSTANCE_NAME=$(terraform output -raw instance_name 2>/dev/null || echo "unknown")
+    if [ "$INSTANCE_NAME" != "unknown" ]; then
+        echo "🔍 Checking if Lightsail instance exists in AWS..."
+        if ! aws lightsail get-instance --instance-name "$INSTANCE_NAME" >/dev/null 2>&1; then
+            echo "⚠️  Instance '$INSTANCE_NAME' was manually deleted from AWS"
+            echo "🔧 Removing orphaned resources from Terraform state..."
+            terraform state rm "aws_lightsail_instance.tailscale_exit_node" 2>/dev/null || true
+            terraform state rm "aws_lightsail_instance_public_ports.tailscale_exit_node_ports" 2>/dev/null || true
+            echo "✅ Orphaned AWS resources removed from state"
+        fi
+    fi
+fi
+
 echo
 echo "Resources in workspace '$CURRENT_WORKSPACE':"
 echo "$RESOURCES"

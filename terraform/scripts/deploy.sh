@@ -119,6 +119,20 @@ terraform init -backend-config=.backend-config
 echo "⚙️  Setting up workspace: $REGION"
 terraform workspace select "$REGION" 2>/dev/null || terraform workspace new "$REGION"
 
+# Check for orphaned resources (manually deleted instances)
+echo "🔍 Checking for orphaned resources..."
+INSTANCE_IN_STATE=$(terraform state list | grep "aws_lightsail_instance.tailscale_exit_node" 2>/dev/null || echo "")
+if [ -n "$INSTANCE_IN_STATE" ]; then
+    INSTANCE_NAME="ts-$REGION"
+    if ! aws lightsail get-instance --instance-name "$INSTANCE_NAME" >/dev/null 2>&1; then
+        echo "⚠️  Found orphaned state for manually deleted instance '$INSTANCE_NAME'"
+        echo "🔧 Cleaning up orphaned resources from state..."
+        terraform state rm "aws_lightsail_instance.tailscale_exit_node" 2>/dev/null || true
+        terraform state rm "aws_lightsail_instance_public_ports.tailscale_exit_node_ports" 2>/dev/null || true
+        echo "✅ Orphaned resources cleaned up"
+    fi
+fi
+
 # Create workspace-specific tfvars file to persist region setting
 echo "⚙️  Creating workspace configuration..."
 cat > terraform.tfvars << EOF

@@ -53,8 +53,8 @@ resource "tailscale_tailnet_key" "exit_node_key" {
 
 # Wait for device to register, then enable as exit node
 data "tailscale_device" "exit_node" {
-  hostname   = local.instance_name  # Use hostname which matches exactly
-  wait_for   = "60s"
+  hostname   = local.instance_name
+  wait_for   = "180s"  # Extended timeout
   depends_on = [aws_lightsail_instance.tailscale_exit_node]
 }
 
